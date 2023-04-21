@@ -5,7 +5,7 @@ services:
     ports:
       - "6379:6379"
   postgres:
-    image: postgres
+    image: postgres:latest
     environment:
       POSTGRES_DB: app_note_auth
       POSTGRES_USER: postgres
@@ -13,4 +13,6 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - /postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+volumes:
+  postgres-data:
