@@ -5,14 +5,15 @@ from fastapi_mail.errors import ConnectionErrors
 from pydantic import EmailStr
 
 from src.services import auth as auth_service
+from src.conf.config import settings
 
 conf = ConnectionConfig(
-    MAIL_USERNAME="b@meta.ua",
-    MAIL_PASSWORD="secretPassword",
-    MAIL_FROM=EmailStr("example@meta.ua"),
-    MAIL_PORT=465,
-    MAIL_SERVER="smtp.meta.ua",
-    MAIL_FROM_NAME="Desired Name",
+    MAIL_USERNAME=settings.email_username,
+    MAIL_PASSWORD=settings.email_password,
+    MAIL_FROM=EmailStr(settings.email_from),
+    MAIL_PORT=settings.email_port,
+    MAIL_SERVER=settings.email_server,
+    MAIL_FROM_NAME="Contacts book App",
     MAIL_STARTTLS=False,
     MAIL_SSL_TLS=True,
     USE_CREDENTIALS=True,
@@ -25,7 +26,7 @@ async def send_email(email: EmailStr, username: str, host: str):
     try:
         token_verification = auth_service.create_email_token({"sub": email})
         message = MessageSchema(
-            subject="Confirm your email ",
+            subject="Confirm your email",
             recipients=[email],
             template_body={"host": host, "username": username, "token": token_verification},
             subtype=MessageType.html

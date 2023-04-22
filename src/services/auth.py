@@ -1,6 +1,4 @@
-import configparser
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
@@ -11,13 +9,11 @@ from sqlalchemy.orm import Session
 
 import src.repository.users as repository_users
 from src.database.db import get_db
+from src.conf.config import settings
 
-file_config = Path(__file__).parent.parent.joinpath('conf/config.ini')
-config = configparser.ConfigParser()
-config.read(file_config)
 
-secret_key = config.get('DB_DEV', 'secret_key')
-algorithm = config.get('DB_DEV', 'algorithm')
+secret_key = settings.secret_key
+algorithm = settings.algorithm
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -91,3 +87,25 @@ async def decode_refresh_token(refresh_token: str):
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Could not validate credentials')
+
+
+def create_email_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=1)
+    to_encode.update({"iat": datetime.utcnow(), "exp": expire, "scope": "email_token"})
+    token = jwt.encode(to_encode, secret_key, algorithm=algorithm)
+    return token
+
+
+def get_email_from_token(token: str):
+    try:
+        payload = jwt.decode(token, secret_key, algorithms=[algorithm])
+        if payload.get('scope') == 'email_token':
+            email = payload['sub']
+            return email
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail='Invalid scope for token')
+
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail='Invalid token for email verification')

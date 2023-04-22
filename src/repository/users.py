@@ -30,3 +30,5 @@ async def confirmed_email(email: str, db: Session) -> None:
     user.confirmed = True
     db.commit()
 
+
+
