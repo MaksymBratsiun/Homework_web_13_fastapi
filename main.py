@@ -1,21 +1,20 @@
 import redis.asyncio as redis
 import uvicorn
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi_limiter import FastAPILimiter
-from fastapi_limiter.depends import RateLimiter
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
+from fastapi_limiter import FastAPILimiter
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from src.conf.config import settings
 from src.database.db import get_db
-from src.routes import contacts, auth
+from src.routes import contacts, auth, users
 
 app = FastAPI()
 
 origins = [
     "http://localhost:3000", "http://127.0.0.1:3000"
-    ]
+]
 
 
 @app.on_event("startup")
@@ -53,6 +52,7 @@ def healthchecker(db: Session = Depends(get_db)):
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(contacts.router, prefix="/api")
+app.include_router(users.router, prefix='/api')
 
 if __name__ == "__main__":
     uvicorn.run("app:app", reload=True)
